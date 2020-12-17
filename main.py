@@ -2,7 +2,8 @@ import time
 import pandas as pd
 import numpy as np
 from scipy.stats import chi2_contingency
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -20,6 +21,8 @@ def load_data(filename):
     df = df.drop("Accidents", axis=1).reset_index(drop=True)
     return df
 
+# Reference for this chi sqr test was taken from:
+#
 def chi_sqr_test(df):
     categorical_columns = df.select_dtypes(exclude='number').drop('Accident severity', axis=1).columns
 
@@ -45,8 +48,14 @@ def chi_sqr_test(df):
     res_chi_ph.columns = ['Pair', 'Hypothesis']
     print(res_chi_ph)
 
+
 def logistic_regression(input_data, output_data):
-    input_prepared = OneHotEncoder().fit_transform(input_data)
+    pipeline = ColumnTransformer([
+        ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
+        ("ord", OrdinalEncoder(), ["Speed limit"])
+    ])
+
+    input_prepared = pipeline.fit_transform(input_data)
     output_prepared = LabelEncoder().fit_transform(output_data)
     Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.33, random_state=1)
     model = LogisticRegression()
@@ -55,8 +64,14 @@ def logistic_regression(input_data, output_data):
     accuracy = accuracy_score(ytest, ypred)
     print('Logistic Regression --> Accuracy: %.2f' % (accuracy * 100))
 
+
 def neural_net(input_data, output_data):
-    input_prepared = OneHotEncoder().fit_transform(input_data)
+    pipeline = ColumnTransformer([
+        ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
+        ("ord", OrdinalEncoder(), ["Speed limit"])
+    ])
+
+    input_prepared = pipeline.fit_transform(input_data)
     output_prepared = to_categorical(LabelEncoder().fit_transform(output_data))
 
     Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.33, random_state=1)
@@ -67,13 +82,13 @@ def neural_net(input_data, output_data):
 
     # define the keras model
     model = Sequential()
-    model.add(Dense(50, input_dim=40, activation='relu', kernel_initializer='he_uniform'))
+    model.add(Dense(100, input_dim=34, activation='relu', kernel_initializer='he_uniform'))
     model.add(Dense(3, activation='softmax'))
     # compile the keras model
     opt = SGD(lr=0.01, momentum=0.9)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     # fit model
-    history = model.fit(Xtrain, ytrain, validation_data=(Xtest, ytest), epochs=10, verbose=0)
+    history = model.fit(Xtrain, ytrain, validation_data=(Xtest, ytest), epochs=20, verbose=0)
     # evaluate the model
     _, train_acc = model.evaluate(Xtrain, ytrain, verbose=0)
     _, test_acc = model.evaluate(Xtest, ytest, verbose=0)
@@ -96,7 +111,7 @@ def neural_net(input_data, output_data):
 def main():
     pd.set_option('display.max_columns', None)
     df = load_data("car-accident-data.csv")
-    #chi_sqr_test(df)
+    # chi_sqr_test(df)
     output_data = df["Accident severity"]
     input_data = df.drop(["Accident severity"], axis=1)
 
@@ -106,4 +121,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

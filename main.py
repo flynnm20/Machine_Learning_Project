@@ -111,12 +111,12 @@ def neural_net(input_data, output_data):
 def main():
     pd.set_option('display.max_columns', None)
     df = load_data("car-accident-data.csv")
-    # chi_sqr_test(df)
+    chi_sqr_test(df)
     output_data = df["Accident severity"]
     input_data = df.drop(["Accident severity"], axis=1)
 
-    logistic_regression(input_data, output_data)
-    neural_net(input_data, output_data)
+    #logistic_regression(input_data, output_data)
+    #neural_net(input_data, output_data)
 
 
 if __name__ == "__main__":

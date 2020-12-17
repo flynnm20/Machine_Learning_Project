@@ -8,6 +8,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.compose import ColumnTransformer
 
+import logistic_regression as logr
+
 
 def load_data(filename):
     df = pd.read_csv(filename)
@@ -34,11 +36,13 @@ def main():
 
     Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.33, random_state=1)
 
-    model = LogisticRegression()
-    model.fit(Xtrain, ytrain)
-    ypred = model.predict(Xtest)
-    accuracy = accuracy_score(ytest, ypred)
-    print('Accuracy: %.2f' % (accuracy * 100))
+    # model = LogisticRegression()
+    # model.fit(Xtrain, ytrain)
+    # ypred = model.predict(Xtest)
+    # accuracy = accuracy_score(ytest, ypred)
+    # print('Accuracy: %.2f' % (accuracy * 100))
+    logr.logistic_cross_val(Xtrain, Xtest, ytrain, ytest, [0.1, 1, 10, 100])
+
 
 
 if __name__ == "__main__":

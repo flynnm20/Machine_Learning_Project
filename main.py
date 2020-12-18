@@ -1,16 +1,16 @@
-import time
 import pandas as pd
 import numpy as np
 from scipy.stats import chi2_contingency
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, RepeatedStratifiedKFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-from scipy.stats import chi2
+from tensorflow.keras import regularizers
 from matplotlib import pyplot
 from keras.utils import to_categorical
+from sklearn.utils import resample
 
 
 def load_data(filename):
@@ -21,33 +21,22 @@ def load_data(filename):
     df = df.drop("Accidents", axis=1).reset_index(drop=True)
     return df
 
-# Reference for this chi sqr test was taken from:
-#
-def chi_sqr_test(df):
-    categorical_columns = df.select_dtypes(exclude='number').drop('Accident severity', axis=1).columns
 
-    chi2_check = []
-    for i in categorical_columns:
-        if chi2_contingency(pd.crosstab(df['Accident severity'], df[i]))[1] < 0.05:
-            chi2_check.append('Reject Null Hypothesis')
-        else:
-            chi2_check.append('Fail to Reject Null Hypothesis')
-    res = pd.DataFrame(data=[categorical_columns, chi2_check]).T
-    res.columns = ['Column', 'Hypothesis']
+def downSample(df):
+    df_slight = df[df["Accident severity"] == 'Slight']
+    df_serious = df[df["Accident severity"] == 'Serious']
+    df_minority = df[df["Accident severity"] == 'Fatal']
 
-    check = {}
-    for i in res[res['Hypothesis'] == 'Reject Null Hypothesis']['Column']:
-        dummies = pd.get_dummies(df[i])
-        bon_p_value = 0.05 / df[i].nunique()
-        for series in dummies:
-            if chi2_contingency(pd.crosstab(df['Accident severity'], dummies[series]))[1] < bon_p_value:
-                check['{}-{}'.format(i, series)] = 'Reject Null'
-            else:
-                check['{}-{}'.format(i, series)] = 'Fail to Reject'
-    res_chi_ph = pd.DataFrame(data=[check.keys(), check.values()]).T
-    res_chi_ph.columns = ['Pair', 'Hypothesis']
-    print(res_chi_ph)
+    df_slight_down_sampled = resample(df_slight,
+                                      replace=False,
+                                      n_samples=len(df_minority))
 
+    df_serious_down_sampled = resample(df_serious,
+                                       replace=False,
+                                       n_samples=len(df_minority))
+
+    df_downsampled = pd.concat([df_slight_down_sampled, df_serious_down_sampled, df_minority])
+    return df_downsampled
 
 def logistic_regression(input_data, output_data):
     pipeline = ColumnTransformer([
@@ -57,6 +46,7 @@ def logistic_regression(input_data, output_data):
 
     input_prepared = pipeline.fit_transform(input_data)
     output_prepared = LabelEncoder().fit_transform(output_data)
+
     Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.33, random_state=1)
     model = LogisticRegression()
     model.fit(Xtrain, ytrain)
@@ -78,15 +68,11 @@ def neural_net(input_data, output_data):
 
     from keras.models import Sequential
     from keras.layers import Dense
-    from keras.optimizers import SGD
-
     # define the keras model
     model = Sequential()
-    model.add(Dense(100, input_dim=34, activation='relu', kernel_initializer='he_uniform'))
+    model.add(Dense(20, input_dim=33, activation='relu'))
     model.add(Dense(3, activation='softmax'))
-    # compile the keras model
-    opt = SGD(lr=0.01, momentum=0.9)
-    model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
+    model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=["accuracy"])
     # fit model
     history = model.fit(Xtrain, ytrain, validation_data=(Xtest, ytest), epochs=20, verbose=0)
     # evaluate the model
@@ -111,12 +97,12 @@ def neural_net(input_data, output_data):
 def main():
     pd.set_option('display.max_columns', None)
     df = load_data("car-accident-data.csv")
-    chi_sqr_test(df)
+    df = downSample(df)
     output_data = df["Accident severity"]
     input_data = df.drop(["Accident severity"], axis=1)
 
-    #logistic_regression(input_data, output_data)
-    #neural_net(input_data, output_data)
+    logistic_regression(input_data, output_data)
+    neural_net(input_data, output_data)
 
 
 if __name__ == "__main__":

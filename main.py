@@ -40,6 +40,8 @@ def downSample(df):
     df_downsampled = pd.concat([df_slight_down_sampled, df_serious_down_sampled, df_minority])
     return df_downsampled
 
+
+
 def logistic_regression(input_data, output_data):
     pipeline = ColumnTransformer([
         ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
@@ -50,11 +52,8 @@ def logistic_regression(input_data, output_data):
     output_prepared = LabelEncoder().fit_transform(output_data)
 
     Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.33, random_state=1)
-    model = LogisticRegression()
-    model.fit(Xtrain, ytrain)
-    ypred = model.predict(Xtest)
-    accuracy = accuracy_score(ytest, ypred)
-    print('Logistic Regression --> Accuracy: %.2f' % (accuracy * 100))
+    logr.logistic_cross_val(Xtrain, Xtest, ytrain, ytest, [0.0001, 0.01, 1, 10, 1000, 100000])
+
 
 
 def neural_net(input_data, output_data):

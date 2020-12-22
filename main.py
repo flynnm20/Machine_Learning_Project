@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, MaxAbsScaler
 from sklearn.utils import resample
 from sklearn.preprocessing import LabelEncoder
@@ -47,7 +48,7 @@ def logistic_regression(input_data, output_data):
     input_prepared = pipeline.fit_transform(input_data)
     output_prepared = LabelEncoder().fit_transform(output_data)
 
-    Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.33, random_state=1)
+    Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.2, random_state=1)
     logr.logistic_cross_val(Xtrain, Xtest, ytrain, ytest, [0.0001, 0.01, 1, 10, 1000, 100000])
 
 
@@ -69,6 +70,7 @@ def main():
     input_prepared = MaxAbsScaler().fit_transform(input_prepared)
     output_prepared = LabelEncoder().fit_transform(output_data)
 
+    logistic_regression(input_data, output_data)
     kNN_classifier.knn_classification(input_prepared, output_prepared)
 
 

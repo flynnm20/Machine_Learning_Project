@@ -38,7 +38,7 @@ def down_sample(df):
     return df_downsampled
 
 
-
+"""
 def logistic_regression(input_data, output_data):
     pipeline = ColumnTransformer([
         ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
@@ -49,8 +49,8 @@ def logistic_regression(input_data, output_data):
     output_prepared = LabelEncoder().fit_transform(output_data)
 
     Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.2, random_state=1)
-    logr.logistic_cross_val(Xtrain, Xtest, ytrain, ytest, [0.0001, 0.01, 1, 10, 1000, 100000])
-
+    logr.logistic_cross_val(Xtrain, Xtest, ytrain, ytest,)
+"""
 
 def main():
     pd.set_option('display.max_columns', None)
@@ -70,7 +70,7 @@ def main():
     input_prepared = MaxAbsScaler().fit_transform(input_prepared)
     output_prepared = LabelEncoder().fit_transform(output_data)
 
-    logistic_regression(input_data, output_data)
+    logr.logistic_cross_val(input_data, output_data)
     kNN_classifier.knn_classification(input_prepared, output_prepared)
 
 

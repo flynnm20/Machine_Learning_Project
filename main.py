@@ -30,8 +30,7 @@ def down_sample(df):
                                        replace=False,
                                        n_samples=len(df_minority))
 
-    df_downsampled = pd.concat(
-        [df_slight_down_sampled, df_serious_down_sampled, df_minority])
+    df_downsampled = pd.concat([df_slight_down_sampled, df_serious_down_sampled, df_minority])
     return df_downsampled
 
 
@@ -44,13 +43,11 @@ def main():
     input_data = df.drop(["Accident severity"], axis=1)
 
     pipeline = ColumnTransformer([
-        ("cat", OneHotEncoder(), [
-         "Region", "Light condition", "Weather condition", "Road surface"]),
+        ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
         ("ord", OrdinalEncoder(), ["Speed limit"])
     ])
 
     input_prepared = pipeline.fit_transform(input_data)
-    input_prepared = MaxAbsScaler().fit_transform(input_prepared)
     output_prepared = LabelEncoder().fit_transform(output_data)
 
     kNN_classifier.knn_classification(input_prepared, output_prepared)

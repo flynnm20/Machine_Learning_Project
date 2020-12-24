@@ -1,9 +1,10 @@
 from sklearn.dummy import DummyClassifier
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, classification_report
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 
 # gamma for Knn gaussian calculation
 from plot_multi_ROC import plot_multi_ROC
@@ -35,7 +36,7 @@ def test_neighbors(input_prepared, output_prepared):
         std_errs.append(np.std(tmpMeanErr))
 
     plt.errorbar(kfolds, mean_errs, yerr=std_errs)
-    plt.title('Cross validation kNN for Neighbor vales')
+    plt.title('Cross validation kNN for Neighbor Values')
     plt.xlabel("Neighbor Values")
     plt.ylabel("f1-scores")
     plt.savefig("Graphs/kNN_Neigh_Crossval")
@@ -69,17 +70,16 @@ def test_gamma(input_prepared, output_prepared):
 
 
 def compare_tuned_model(input_data, output_data):
-    # Tunned Model
-    Xtrain, Xtest, ytrain, ytest = train_test_split(
-        input_data, output_data, test_size=0.33, random_state=1)
-    tunned_knn_model = KNeighborsClassifier(
-        n_neighbors=50, weights='uniform').fit(Xtrain, ytrain)
+    ## Tunned Model
+    Xtrain, Xtest, ytrain, ytest = train_test_split(input_data, output_data, test_size=0.33, random_state=1)
+    tunned_knn_model = KNeighborsClassifier(n_neighbors=50, weights='uniform').fit(Xtrain, ytrain)
     tuned_model_ypred = tunned_knn_model.predict(Xtest)
-    print("Tuned Knn f-1 score: " +
-          str(f1_score(ytest, tuned_model_ypred, average='weighted')))
+    print("Tuned Knn f-1 score: " + str(f1_score(ytest, tuned_model_ypred, average='weighted')))
+    print(confusion_matrix(ytest, tuned_model_ypred))
+    print(classification_report(ytest, tuned_model_ypred))
 
-    # Dummy Model
-    dummy_classifier = DummyClassifier(strategy="most_frequent")
+    ## Dummy Model
+    dummy_classifier = DummyClassifier(strategy="uniform")
     dummy_classifier.fit(Xtrain, ytrain)
     dummy_classifier_ypred = dummy_classifier.predict(Xtest)
     print("Dummy Model f-1 score: " +
@@ -88,15 +88,16 @@ def compare_tuned_model(input_data, output_data):
     pred_prob = tunned_knn_model.predict_proba(Xtest)
     plot_multi_ROC(pred_prob, ytest, 'kNN')
 
+
 # does all experiments and tests tuned model against baseline model.
 def knn_classification(input_data, output_data):
     # gamma test
-    test_gamma(input_data, output_data)
+    # test_gamma(input_data, output_data)
     # resulting graph proves that gamma is irrelevant for this set
 
     # k test
-    test_neighbors(input_data, output_data)
+    # test_neighbors(input_data, output_data)
     # optimal k value is 50. Rather high and probably contributes to overfitting but smaller values are far less accurate
-    # Increasing K tends to increase the overall accuracy because the data is so big.
+
     # use tuned model K = 50 and Weight is uniform.
     compare_tuned_model(input_data, output_data)

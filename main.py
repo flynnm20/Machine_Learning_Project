@@ -76,7 +76,7 @@ def main():
 
     # Run our models
 
-    # logr.logistic_cross_val(input_prepared, output_prepared)
+    logr.logistic_cross_val(input_prepared, output_prepared)
     logr.tuned_logistic_regression(input_prepared, output_prepared)
     kNN_classifier.knn_classification(input_prepared, output_prepared)
 

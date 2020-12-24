@@ -18,21 +18,22 @@ def logistic_cross_val(input_prepared, output_prepared):
 
     # Initialise data
     cs = [0.0001, 0.001, 0.01, 0.1, 1, 10]
-    kf = KFold(n_splits=10)
-
-    # best_model, best_score, best_pred, xtest, ytest, c = None, 0, [], [], [], 0
+    kf = KFold(n_splits=5)
 
     mean_errs = []
     std_errs = []
     for c in cs:
         tmpMeanErr = []
         for train, test in kf.split(input_prepared):
+            # Train + evaluate model for each fold
             model = logistic_regression(input_prepared[train], output_prepared[train], c)
             ypred = model.predict(input_prepared[test])
             score = f1_score(output_prepared[test], ypred, average="weighted")
             tmpMeanErr.append(score)
+        # Store mean and standard deviation of error for each C
         mean_errs.append(np.mean(tmpMeanErr))
         std_errs.append(np.std(tmpMeanErr))
+    # Plot graph of results
     plt.errorbar(cs, mean_errs, yerr=std_errs)
     plt.title('Cross validation logistic regression for C Values')
     plt.xlabel("C Values")
@@ -44,13 +45,14 @@ def logistic_cross_val(input_prepared, output_prepared):
 
 
 def tuned_logistic_regression(input_data, output_data):
+    # Tuned Model
     Xtrain, Xtest, ytrain, ytest = train_test_split(input_data, output_data, test_size=0.333, random_state=1)
     model = logistic_regression(Xtrain, ytrain, 1)
     ypred = model.predict(Xtest)
     print(confusion_matrix(ytest, ypred))
     print(classification_report(ytest, ypred))
 
-    ## Dummy Model
+    # Dummy Model
     dummy_classifier = DummyClassifier(strategy="uniform")
     dummy_classifier.fit(Xtrain, ytrain)
     dummy_classifier_ypred = dummy_classifier.predict(Xtest)

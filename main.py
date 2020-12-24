@@ -38,20 +38,6 @@ def down_sample(df):
     return df_downsampled
 
 
-"""
-def logistic_regression(input_data, output_data):
-    pipeline = ColumnTransformer([
-        ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
-        ("ord", OrdinalEncoder(), ["Speed limit"])
-    ])
-
-    input_prepared = pipeline.fit_transform(input_data)
-    output_prepared = LabelEncoder().fit_transform(output_data)
-
-    Xtrain, Xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.2, random_state=1)
-    logr.logistic_cross_val(Xtrain, Xtest, ytrain, ytest,)
-"""
-
 def main():
     pd.set_option('display.max_columns', None)
     df = load_data("car-accident-data.csv")
@@ -70,7 +56,8 @@ def main():
     input_prepared = MaxAbsScaler().fit_transform(input_prepared)
     output_prepared = LabelEncoder().fit_transform(output_data)
 
-    logr.logistic_cross_val(input_data, output_data)
+    logr.logistic_cross_val(input_prepared, output_prepared)
+    logr.tuned_logistic_regression(input_prepared, output_prepared)
     kNN_classifier.knn_classification(input_prepared, output_prepared)
 
 

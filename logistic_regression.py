@@ -1,57 +1,63 @@
-from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from matplotlib import pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, LabelEncoder
+from sklearn.model_selection import KFold, train_test_split
+from sklearn.metrics import f1_score, confusion_matrix, classification_report
+import numpy as np
 
-import utilities as utl
-from sklearn.metrics import confusion_matrix, f1_score
+from plot_multi_ROC import plot_multi_ROC
 
 
-def logistic_regression(xtrain, ytrain, c, is_l1):
-    if is_l1:
-        model = LogisticRegression(C=c, solver="saga", penalty="l1")
-    else:
-        model = LogisticRegression(C=c, solver="saga", penalty="l2")
+def logistic_regression(xtrain, ytrain, c):
+    model = LogisticRegression(C=c, solver="saga", penalty="l2")
     model.fit(xtrain, ytrain)
     return model
 
 
-def logistic_cross_val(input_data, output_data):
+def logistic_cross_val(input_prepared, output_prepared):
 
     # Initialise data
-    pipeline = ColumnTransformer([
-        ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
-        ("ord", OrdinalEncoder(), ["Speed limit"])
-    ])
-    input_prepared = pipeline.fit_transform(input_data)
-    output_prepared = LabelEncoder().fit_transform(output_data)
-    xtrain, xtest, ytrain, ytest = train_test_split(input_prepared, output_prepared, test_size=0.2, random_state=1)
-    cs = [0.0001, 0.01, 1, 10, 1000, 100000]
+    cs = [0.0001, 0.001, 0.01, 0.1, 1, 10]
+    kf = KFold(n_splits=5)
 
-    # Initialise output graph
-    fig, axs = plt.subplots(2, len(cs))
-    axs[0][0].set_ylabel("L1 Penalty")
-    axs[1][0].set_ylabel("L2 Penalty")
+    # best_model, best_score, best_pred, xtest, ytest, c = None, 0, [], [], [], 0
 
-    for i, c in enumerate(cs):
-        # L1 penalty
-        model = logistic_regression(xtrain, ytrain, c, is_l1=True)
-        ypred = model.predict(xtest)
-        accuracy = f1_score(ytest, ypred, average="micro")
-        print('c = %.2f , L1 Penalty --> Accuracy: %.2f' % (c, accuracy * 100))
-        utl.plot_roc_curves(ytest, ypred, axs[0][i])
+    mean_errs = []
+    std_errs = []
+    for c in cs:
+        tmpMeanErr = []
+        for train, test in kf.split(input_prepared):
+            model = logistic_regression(input_prepared[train], output_prepared[train], c)
+            ypred = model.predict(input_prepared[test])
+            score = f1_score(output_prepared[test], ypred, average="weighted")
+            tmpMeanErr.append(score)
+        mean_errs.append(np.mean(tmpMeanErr))
+        std_errs.append(np.std(tmpMeanErr))
+    plt.errorbar(cs, mean_errs, yerr=std_errs)
+    plt.title('Cross validation logistic regression for C Values')
+    plt.xlabel("C Values")
+    plt.xscale("log")
+    plt.xticks(cs, ["0.0001", "0.001", "0.01", "0.1", "1", "10"])
+    plt.ylabel("f1-score")
+    plt.savefig("Graphs/logistic_regression_cross_val.png", dpi=300)
+    plt.close()
+    print("Done!")
+    # print(confusion_matrix(ytest, best_pred))
+    # print(classification_report(ytest, best_pred))
+    # utl.print_auc(ytest, ypred)
 
-        # L2 penalty
-        model = logistic_regression(xtrain, ytrain, c, is_l1=False)
-        ypred = model.predict(xtest)
-        accuracy = f1_score(ytest, ypred, average="micro")
-        print('c = %.2f , L2 Penalty --> Accuracy: %.2f' % (c, accuracy * 100))
-        utl.plot_roc_curves(ytest, ypred, axs[1][i])
-        axs[1][i].set_xlabel("C = " + str(c))
-        if i != 0:
-            axs[0][i].set_yticklabels([])
-            axs[1][i].set_yticklabels([])
-        axs[0][i].set_xticklabels([])
-    fig.savefig("logistic_regression_cross_val.png", dpi=300)
+   #  pred_prob = best_model.predict_proba(xtest)
+    # plot_multi_ROC(pred_prob, ytest, 'Logistic Regression')
 
+
+def tuned_logistic_regression(input_data, output_data):
+    Xtrain, Xtest, ytrain, ytest = train_test_split(
+        input_data, output_data, test_size=0.2, random_state=1)
+    model = logistic_regression(Xtrain, ytrain, 1)
+    ypred = model.predict(Xtest)
+    print("f-1 score: " +
+          str(f1_score(ytest, ypred, average='weighted')))
+    print(confusion_matrix(ytest, ypred))
+    print(classification_report(ytest, ypred))
+
+    pred_prob = model.predict_proba(Xtest)
+    plot_multi_ROC(pred_prob, ytest, 'logistic regression')

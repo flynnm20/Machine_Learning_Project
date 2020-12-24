@@ -17,8 +17,7 @@ def baseline_model():
 
 
 def neural_net(input_data, output_data):
-    estimator = KerasClassifier(
-        build_fn=baseline_model, epochs=20, batch_size=5, verbose=0)
+    estimator = KerasClassifier(build_fn=baseline_model, epochs=20, batch_size=5, verbose=0)
     kfold = KFold(n_splits=10, shuffle=True)
     results = cross_val_score(estimator,  input_data, output_data, cv=kfold)
     print("Baseline: " + (results.mean() * 100, results.std() * 100))

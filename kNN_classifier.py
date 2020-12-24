@@ -80,6 +80,8 @@ def compare_tuned_model(input_data, output_data):
     dummy_classifier = DummyClassifier(strategy="uniform")
     dummy_classifier.fit(Xtrain, ytrain)
     dummy_classifier_ypred = dummy_classifier.predict(Xtest)
+
+    # Final f-1 scores
     print("Dummy Model f-1 score: " +
           str(f1_score(ytest, dummy_classifier_ypred, average='weighted')))
     print("Tuned Knn f-1 score: " + str(f1_score(ytest, tuned_model_ypred, average='weighted')))
@@ -90,13 +92,11 @@ def compare_tuned_model(input_data, output_data):
 
 # does all experiments and tests tuned model against baseline model.
 def knn_classification(input_data, output_data):
-    # gamma test
+
+    # gamma doesn't effect the overall accuracy.
     # test_gamma(input_data, output_data)
-    # resulting graph proves that gamma is irrelevant for this set
 
     # k test
     # test_neighbors(input_data, output_data)
-    # optimal k value is 50. Rather high and probably contributes to overfitting but smaller values are far less accurate
-
-    # use tuned model K = 50 and Weight is uniform.
+    # Increasing K tends to increase the overall accuracy because the data is so big.
     compare_tuned_model(input_data, output_data)

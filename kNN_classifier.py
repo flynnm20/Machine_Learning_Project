@@ -8,8 +8,10 @@ from sklearn.metrics import confusion_matrix
 
 # gamma for Knn gaussian calculation
 from plot_multi_ROC import plot_multi_ROC
+
 # Constant for gamma
 gamma = 0
+
 
 # Gaussian Kernel function
 def gaussian_kernel(dist):
@@ -92,7 +94,7 @@ def compare_tuned_model(input_data, output_data):
 
 # does all experiments and tests tuned model against baseline model.
 def knn_classification(input_data, output_data):
-
+    # gamma test
     # gamma doesn't effect the overall accuracy.
     # test_gamma(input_data, output_data)
 

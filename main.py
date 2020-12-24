@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, MaxAbsScaler
 from sklearn.utils import resample
 from sklearn.preprocessing import LabelEncoder
 import kNN_classifier
+
+import logistic_regression as logr
 
 
 def load_data(filename):
@@ -30,8 +33,7 @@ def down_sample(df):
                                        replace=False,
                                        n_samples=len(df_minority))
 
-    df_downsampled = pd.concat(
-        [df_slight_down_sampled, df_serious_down_sampled, df_minority])
+    df_downsampled = pd.concat([df_slight_down_sampled, df_serious_down_sampled, df_minority])
     return df_downsampled
 
 
@@ -44,15 +46,15 @@ def main():
     input_data = df.drop(["Accident severity"], axis=1)
 
     pipeline = ColumnTransformer([
-        ("cat", OneHotEncoder(), [
-         "Region", "Light condition", "Weather condition", "Road surface"]),
+        ("cat", OneHotEncoder(), ["Region", "Light condition", "Weather condition", "Road surface"]),
         ("ord", OrdinalEncoder(), ["Speed limit"])
     ])
 
     input_prepared = pipeline.fit_transform(input_data)
-    input_prepared = MaxAbsScaler().fit_transform(input_prepared)
     output_prepared = LabelEncoder().fit_transform(output_data)
 
+    logr.logistic_cross_val(input_prepared, output_prepared)
+    logr.tuned_logistic_regression(input_prepared, output_prepared)
     kNN_classifier.knn_classification(input_prepared, output_prepared)
 
 

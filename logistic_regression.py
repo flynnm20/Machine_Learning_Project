@@ -40,13 +40,6 @@ def logistic_cross_val(input_prepared, output_prepared):
     plt.ylabel("f1-score")
     plt.savefig("Graphs/logistic_regression_cross_val.png", dpi=300)
     plt.close()
-    print("Done!")
-    # print(confusion_matrix(ytest, best_pred))
-    # print(classification_report(ytest, best_pred))
-    # utl.print_auc(ytest, ypred)
-
-   #  pred_prob = best_model.predict_proba(xtest)
-    # plot_multi_ROC(pred_prob, ytest, 'Logistic Regression')
 
 
 def tuned_logistic_regression(input_data, output_data):

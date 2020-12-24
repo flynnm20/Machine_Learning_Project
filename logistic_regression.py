@@ -1,3 +1,4 @@
+from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 from matplotlib import pyplot as plt
 from sklearn.model_selection import KFold, train_test_split
@@ -17,7 +18,7 @@ def logistic_cross_val(input_prepared, output_prepared):
 
     # Initialise data
     cs = [0.0001, 0.001, 0.01, 0.1, 1, 10]
-    kf = KFold(n_splits=5)
+    kf = KFold(n_splits=10)
 
     # best_model, best_score, best_pred, xtest, ytest, c = None, 0, [], [], [], 0
 
@@ -43,14 +44,20 @@ def logistic_cross_val(input_prepared, output_prepared):
 
 
 def tuned_logistic_regression(input_data, output_data):
-    Xtrain, Xtest, ytrain, ytest = train_test_split(
-        input_data, output_data, test_size=0.2, random_state=1)
+    Xtrain, Xtest, ytrain, ytest = train_test_split(input_data, output_data, test_size=0.333, random_state=1)
     model = logistic_regression(Xtrain, ytrain, 1)
     ypred = model.predict(Xtest)
-    print("f-1 score: " +
-          str(f1_score(ytest, ypred, average='weighted')))
     print(confusion_matrix(ytest, ypred))
     print(classification_report(ytest, ypred))
+
+    ## Dummy Model
+    dummy_classifier = DummyClassifier(strategy="uniform")
+    dummy_classifier.fit(Xtrain, ytrain)
+    dummy_classifier_ypred = dummy_classifier.predict(Xtest)
+
+    print("Dummy Model f-1 score: " +
+          str(f1_score(ytest, dummy_classifier_ypred, average='weighted')))
+    print("Tuned Logistic Regression f-1 score: " + str(f1_score(ytest, ypred, average='weighted')))
 
     pred_prob = model.predict_proba(Xtest)
     plot_multi_ROC(pred_prob, ytest, 'logistic regression')

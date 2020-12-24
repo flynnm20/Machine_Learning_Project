@@ -26,7 +26,6 @@ def plot_multi_ROC(pred_prob, ytest, model_name):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive rate')
     plt.legend(loc='best')
-    # Save the figure
-    plt.savefig("Graphs/" + str(model_name) + "_ROC_Graph")
+    plt.savefig("Graphs/"+model_name+"_ROC_Graph")
     plt.close()
 
